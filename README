@@ -1,0 +1,8 @@
+Impressed with David Beazley 'A Curious Course on Coroutines and Concurrency'
+http://www.dabeaz.com/coroutines/
+
+I implement PyQt4 based Coroutines scheduler.
+
+This is nuclear mix of Coroutines, Qt and Python power.
+
+I add 'yield Return(..)' pattern, which allows to return values from Tasks and subcoroutines. 
