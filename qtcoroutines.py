@@ -167,7 +167,6 @@ class Scheduler( QObject ):
         t = Task( parent, coroutine )  
         t.destroyed.connect( self.taskDestroyed )
         self.tasks += 1
-        # autorun.inf :)
         self.schedule( t )
         return t
 
