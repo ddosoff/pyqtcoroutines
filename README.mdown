@@ -19,12 +19,13 @@ It's possible to write asynchronous code in the synchronous manner:
                 # This is not QCoreApplication.processEvents()!
                 #
                 # We will normally return to event loop.
-                # After next scheduler timer tick, execution
-                # continues after yield.
+                #
+                # And on the next scheduler timer tick, continue
+                # execution after this yield.
     
                 yield
         except:
-            # handle all exceptions!
+            # handle all exceptions in synchronous manner!
             ...
             pass
     
