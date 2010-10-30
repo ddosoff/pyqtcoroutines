@@ -17,11 +17,10 @@ It's possible to write asynchronous code in the synchronous manner:
                 # Let qt event loop to process pending events.
                 #
                 # This is not QCoreApplication.processEvents()!
-                #
                 # We will normally return to event loop.
                 #
-                # And on the next scheduler timer tick, continue
-                # execution after this yield.
+                # And continue execution after this yield,
+                # with the next scheduler timer tick.
     
                 yield
         except:
@@ -47,3 +46,8 @@ I add 'yield Return(..)' pattern.
     def task():
         value = yield subcoroutine()
         ...
+
+
+Check out working example:
+
+$ **python [./qtcoroutines.py](http://github.com/ddosoff/pyqtcoroutines/blob/master/qtcoroutines.py)**
