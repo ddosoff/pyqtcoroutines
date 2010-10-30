@@ -286,20 +286,20 @@ if __name__ == '__main__':
 
         print '%s Sleep( %d )' % (name, ms)
         yield Sleep( ms )
-        print '%s Bye bye' % name
 
         yield Return( name, v, v1, v2 )
         print 'never print it'
-
-    # test subcoroutines
-    for i in range( 0, 3 ):
-        lastTask = s.newTask( subcoroutinesTest('task %d' % i) )
-
 
     class TaskReturnValueTest( QObject ):
         def slotDone( self, res ):
             print 'slotDone():', res.value
 
     d = TaskReturnValueTest()
-    lastTask.done.connect( d.slotDone )
+
+    # start 3 tasks
+    for i in range( 0, 3 ):
+        t = s.newTask( subcoroutinesTest('task %d' % i) )
+        t.done.connect( d.slotDone )
+
+    # start qt event loop
     a.exec_()
