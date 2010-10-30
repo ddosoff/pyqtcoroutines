@@ -1,37 +1,48 @@
-People like to think synchronously. Computers must work asynchronously.
+# People like to think synchronously. Computers must work asynchronously. #
 
-Impressed with David Beazley 'A Curious Course on Coroutines and Concurrency'
-http://www.dabeaz.com/coroutines/, I implement PyQt4 based coroutines scheduler.
+Impressed with excelent
+David Beazley [python coroutines](http://www.dabeaz.com/coroutines/) presentation, 
+I implement PyQt4 based coroutines scheduler.
 
 It's possible to write asynchronous code in the synchronous manner:
 
-# this is 'coroutine'. Special function which called from scheduler.
-def sqlInserter( aLotOfrecords ):
-    try:
-        for record in aLotOfrecords:
-            # insert record to database
+    # Coroutine - special python function/generator with yield's,
+    # where we could trap execution and process qt events.
+    def sqlInserter( aLotOfrecords ):
+        try:
+            for record in aLotOfrecords:
+                # do small piece of work here 
+                ...
+    
+                # Let qt event loop to process pending events.
+                #
+                # This is not QCoreApplication.processEvents()!
+                #
+                # We will normally return to event loop.
+                # After next scheduler timer tick, execution
+                # continues after yield.
+    
+                yield
+        except:
+            # handle all exceptions!
             ...
-            # now let qt event loop to process pending event!
-            yield
-    except:
-        # handle all exceptions!
-        ...
-        pass
+            pass
+    
+    
+    s = Scheduler()
+    s.newTask( sqlInserter(records) )
 
-
-s = Scheduler()
-s.newTask( sqlInserter(records) )
 
 
 In addition to David's subcoroutines and system call ideas,
 I add 'yield Return(..)' pattern.
 
 
-def subcoroutine():
-    ...
-    yield Return( myWork )
-
-
-def task():
-    value = yield subcoroutine()
-    ...
+    def subcoroutine():
+        ...
+        yield Return( myWork )
+    
+    
+    def task():
+        value = yield subcoroutine()
+        ...
