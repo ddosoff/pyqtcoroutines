@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 #
-# Qt coroutines implementation.
+# PyQt4 based coroutines implementation.
+#
 # GNU LGPL v. 2.1
 #
 
@@ -13,19 +14,19 @@ from PyQt4.QtCore import QObject, QTimer, pyqtSignal
 
 
 # Reduce scheduler overhead.
-# Iterate inside Task.run, when calling subcoroutines.
+# Iterate in the Task.run, while calling subcoroutines.
 MAX_TASK_ITERATIONS = 3
 
 
-# Scheduler sends badTask signal
+# Scheduler longIteration signal warning
 MAX_ITERATION_TIME = datetime.timedelta( milliseconds = 300 )
 
 
-# Average scheduler running time between qt loop cycle
+# Average scheduler runtime between qt loop cycles
 AVERAGE_SCHEDULER_TIME = datetime.timedelta( milliseconds = 30 )
 
 
-# Max scheduler iterations between qt loop cycle
+# Max scheduler iterations between qt loop cycles
 MAX_SCHEDULER_ITERATIONS = 10
 
 
@@ -46,13 +47,15 @@ class Return( object ):
 
 
 
-# Base deferred system call class
+# Base system call
 class SystemCall( QObject ):
     def handle( self ):
         raise Exception( 'Not Implemented' )
 
 
 
+# System call example
+#
 # Usage:
 #   yield Sleep( 100 )   # sleep 100ms
 class Sleep( SystemCall ):
@@ -80,8 +83,9 @@ class Task( QObject ):
         QObject.__init__( self, parent )
 
         self.stack = deque()          # stack for subcoroutines
-        self.coroutine = coroutine    # top coroutine/subcoroutine
+        self.coroutine = coroutine    # task coroutine / top subcoroutine
         self.sendval = None           # value to send into coroutine
+        self.result = Return( None )  # default return value
 
 
     def formatBacktrace( self ):
@@ -129,21 +133,21 @@ class Task( QObject ):
                                  (self.formatBacktrace(), type(self.result)) )
             except StopIteration:
                 if not isinstance( self.result, Return ):
-                    # here is old result, replace with None
+                    # replace previous yield
                     self.result = Return( None )
 
                 # end of task?
                 if not self.stack:
                     self.done.emit( self.result )
-                    del self.coroutine
                     raise
 
-                # end of subcoroutine, return None..
+                # end of subcoroutine
                 self.sendval = self.result.value
+
                 # in case of last yield in coroutine
                 # self.result never will be assigned again
                 # clear it.
-                self.result = Return( None )
+                #self.result = Return( None )
                 del self.coroutine
                 self.coroutine = self.stack.pop()
 
@@ -186,37 +190,45 @@ class Scheduler( QObject ):
     def taskDestroyed( self, task ):
         self.tasks -= 1
 
+        if not self.tasks:
+            self.done.emit()
 
-    # scheduler!
+
+    def checkRuntime( self, task ):
+        t = datetime.datetime.now()
+        l = self.lastIterationTime
+        self.lastIterationTime = t
+
+        # task iteration too long?
+        if t - l > MAX_ITERATION_TIME:
+            self.longIteration.emit( t - l, task )
+            return True
+
+        # scheduler iterating too long? 
+        if t - self.startIterationTime > AVERAGE_SCHEDULER_TIME:
+            return True
+        
+        return False
+
+
+    # scheduler loop!
     def timerEvent( self, e ):
-        # Do not iterate too much, 
-        # let qt process events too.
+        print 'scheduler tasks %d, ready %d' % ( self.tasks, len(self.ready) )
+        # Do not iterate too much.. 
         i = 0
-        startTime = datetime.datetime.now()
-        lastTime = startTime
+        self.startIterationTime = datetime.datetime.now()
+        self.lastIterationTime = self.startIterationTime
         timeout = False
         while self.ready and not timeout:
             i += 1
             if i > MAX_SCHEDULER_ITERATIONS:
-                print 'MAX_SCHEDULER_ITERATIONS exceed'
                 return
 
             task = self.ready.pop()
             try:
                 result = task.run()
-
-                t = datetime.datetime.now()
-                # scheduler is running too long? 
-                if t - startTime > AVERAGE_SCHEDULER_TIME:
-                    print 'scheduler(): iteration %d, execution time %s, AVERAGE_SCHEDULER_TIME exceed' % (i, t - startTime)
-                    timeout = True
-
-                # task was running too long?
-                if t - lastTime > MAX_ITERATION_TIME:
-                    print 'scheduler(): %s execution time incredibly long %s!' % (task, t - lastTime)
-                    self.longIteration.emit( t - lastTime, task )
                 
-                lastTime = t
+                timeout = self.checkRuntime( task )
           
                 if isinstance( result, SystemCall ):
                     # save task to result and process it 
@@ -226,10 +238,15 @@ class Scheduler( QObject ):
                     # SystemCall will resume execution 
                     # this task to ready queue
                     continue
-            except StopIteration:
-                self.tasks -= 1
+            except Exception as e:
+                timeout = self.checkRuntime( task )
+
                 task.deleteLater()
-                continue
+
+                if isinstance( e, StopIteration ):
+                    continue
+                else:
+                    raise
 
             # continue this task
             self.ready.appendleft( task )
@@ -237,9 +254,6 @@ class Scheduler( QObject ):
         if not self.ready:
             self.killTimer( self.timerId )
             self.timerId = None
-
-        if not self.tasks:
-            self.done.emit()
 
 
 
