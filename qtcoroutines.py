@@ -143,11 +143,6 @@ class Task( QObject ):
 
                 # end of subcoroutine
                 self.sendval = self.result.value
-
-                # in case of last yield in coroutine
-                # self.result never will be assigned again
-                # clear it.
-                #self.result = Return( None )
                 del self.coroutine
                 self.coroutine = self.stack.pop()
 
