@@ -164,15 +164,18 @@ class Scheduler( QObject ):
     def newTask( self, coroutine, parent = None ):
         if parent is None:
             parent = self
+
         t = Task( parent, coroutine )  
         t.destroyed.connect( self.taskDestroyed )
         self.tasks += 1
+
         self.schedule( t )
         return t
 
 
     def schedule( self, t ):
         self.ready.appendleft( t )
+
         if self.timerId is None:
             self.timerId = self.startTimer( 0 )
 
