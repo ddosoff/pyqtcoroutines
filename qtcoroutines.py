@@ -71,6 +71,7 @@ class Sleep( SystemCall ):
     def timerEvent( self, e ):
         self.task.sendval = None
         self.scheduler.schedule( self.task )
+        self.deleteLater()
 
 
 
@@ -208,7 +209,6 @@ class Scheduler( QObject ):
 
     # scheduler loop!
     def timerEvent( self, e ):
-        print 'scheduler tasks %d, ready %d' % ( self.tasks, len(self.ready) )
         # Do not iterate too much.. 
         i = 0
         self.startIterationTime = datetime.datetime.now()
@@ -254,6 +254,7 @@ class Scheduler( QObject ):
 
 if __name__ == '__main__':
     import sys
+    import random
     from PyQt4.QtGui import QApplication
     a = QApplication( sys.argv )
     s = Scheduler( a )
@@ -279,6 +280,14 @@ if __name__ == '__main__':
         v = yield valueReturner( name )
 
         print '%s v = %s, v1 = %s, v2 = %s' % (name, v, v1, v2)
+
+        # Sleep system call example
+        ms = random.randint( 1000, 2000 )
+
+        print '%s Sleep( %d )' % (name, ms)
+        yield Sleep( ms )
+        print '%s Bye bye' % name
+
         yield Return( name, v, v1, v2 )
         print 'never print it'
 
