@@ -77,7 +77,6 @@ class Sleep( SystemCall ):
 
 # Coroutine based task
 class Task( QObject ):
-    # Signals
     done = pyqtSignal( Return )
 
     def __init__( self, parent, coroutine ):
@@ -150,7 +149,6 @@ class Task( QObject ):
 
 
 class Scheduler( QObject ):
-    # Signals:
     longIteration = pyqtSignal( datetime.timedelta, Task )
     done = pyqtSignal()
 
