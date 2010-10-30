@@ -1,7 +1,7 @@
 # People like to think synchronously. Computers must work asynchronously. #
 
 Impressed with excelent
-David Beazley [python coroutines](http://www.dabeaz.com/coroutines/) presentation, 
+David Beazley [python coroutines](http://www.dabeaz.com/coroutines/) work, 
 I implement PyQt4 based coroutines scheduler.
 
 It's possible to write asynchronous code in the synchronous manner:
