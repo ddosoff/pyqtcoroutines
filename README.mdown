@@ -2,7 +2,7 @@
 
 Impressed with excelent
 David Beazley [python coroutines](http://www.dabeaz.com/coroutines/) course, 
-I implement PyQt4 based coroutines scheduler.
+I wrote PyQt4 based coroutines scheduler.
 
 It's possible to write pyqt asynchronous code in the synchronous manner:
 
@@ -35,7 +35,7 @@ It's possible to write pyqt asynchronous code in the synchronous manner:
 
 
 In addition to David's subcoroutines and system call ideas,
-I add 'yield Return(..)' pattern.
+I added 'yield Return(..)' pattern.
 
 
     def subcoroutine():
