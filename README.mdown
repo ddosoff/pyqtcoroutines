@@ -1,12 +1,12 @@
 # People like to think synchronously. Computers must work asynchronously. #
 
 Impressed with excelent
-David Beazley [python coroutines](http://www.dabeaz.com/coroutines/) work, 
+David Beazley [python coroutines](http://www.dabeaz.com/coroutines/) course, 
 I implement PyQt4 based coroutines scheduler.
 
 It's possible to write asynchronous code in the synchronous manner:
 
-    # Coroutine - special python function/generator with yield's,
+    # Coroutine is a special python function/generator with yield's,
     # where we could trap execution and process qt events.
     def sqlInserter( aLotOfrecords ):
         try:
