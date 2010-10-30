@@ -13,8 +13,8 @@ from types import GeneratorType
 from PyQt4.QtCore import QObject, QTimer, pyqtSignal
 
 
-# Reduce scheduler overhead.
-# Iterate in the Task.run, while calling subcoroutines.
+# Reduce scheduler overhead
+# Iterate in the Task.run, while calling subcoroutines
 MAX_TASK_ITERATIONS = 3
 
 
