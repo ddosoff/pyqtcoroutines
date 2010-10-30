@@ -1,4 +1,4 @@
-# People like to think synchronously. Computers must work asynchronously. #
+# People likes to think synchronously. Computers must work asynchronously. #
 
 Impressed with excelent
 David Beazley [python coroutines](http://www.dabeaz.com/coroutines/) course, 
