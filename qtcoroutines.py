@@ -149,7 +149,6 @@ class Task( QObject ):
 
 
 
-
 class Scheduler( QObject ):
     # Signals:
     longIteration = pyqtSignal( datetime.timedelta, Task )
