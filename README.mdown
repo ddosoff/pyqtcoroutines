@@ -4,7 +4,7 @@ Impressed with excelent
 David Beazley [python coroutines](http://www.dabeaz.com/coroutines/) course, 
 I implement PyQt4 based coroutines scheduler.
 
-It's possible to write asynchronous code in the synchronous manner:
+It's possible to write pyqt asynchronous code in the synchronous manner:
 
     # Coroutine is a special python function/generator with yield's,
     # where we could trap execution and process qt events.
