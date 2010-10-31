@@ -18,9 +18,6 @@ You could write PyQt asynchronous code in the synchronous manner:
                 #
                 # This is not QCoreApplication.processEvents()!
                 # We will normally return to event loop.
-                #
-                # And continue execution after this yield,
-                # with the next scheduler timer tick.
     
                 yield
         except:
@@ -29,6 +26,7 @@ You could write PyQt asynchronous code in the synchronous manner:
             pass
     
     
+    # create scheduler (one per app enough) object and run coroutine as task
     s = Scheduler()
     s.newTask( sqlInserter(records) )
 
