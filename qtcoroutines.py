@@ -4,7 +4,7 @@
 # PyQt4 based coroutines implementation.
 #
 # GNU LGPL v. 2.1
-#
+# Kirill Kostuchenko <ddosoff@gmail.com>
 
 import sys
 import datetime
@@ -22,11 +22,11 @@ MAX_TASK_ITERATIONS = 3
 MAX_ITERATION_TIME = datetime.timedelta( milliseconds = 300 )
 
 
-# Average scheduler runtime between qt loop cycles
+# Average scheduler runtime between qt loops
 AVERAGE_SCHEDULER_TIME = datetime.timedelta( milliseconds = 30 )
 
 
-# Max scheduler iterations between qt loop cycles
+# Max scheduler iterations between qt loops
 MAX_SCHEDULER_ITERATIONS = 10
 
 
