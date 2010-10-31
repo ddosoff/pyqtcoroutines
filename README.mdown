@@ -23,7 +23,6 @@ You could write PyQt asynchronous code in the synchronous manner:
         except:
             # handle all exceptions in synchronous manner!
             ...
-            pass
     
     
     # create scheduler and run coroutine as task
