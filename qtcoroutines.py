@@ -160,7 +160,7 @@ class Scheduler( QObject ):
         self.timerId = None
 
 
-    # Add and schedule coroutine as Task
+    # Schedule coroutine as Task
     def newTask( self, coroutine, parent = None ):
         if parent is None:
             parent = self
@@ -253,11 +253,7 @@ if __name__ == '__main__':
     import sys
     import random
     from PyQt4.QtGui import QApplication
-    a = QApplication( sys.argv )
-    s = Scheduler( a )
 
-    # call QApplication.quit() when all coroutines done
-    s.done.connect( a.quit )
 
     def valueReturner( name ):
         print '%s valueReturner()' % name
@@ -265,11 +261,13 @@ if __name__ == '__main__':
         yield Return( v )
         print 'never print it'
 
+
     def multipleValueReturner( name ):
         print '%s multipleValueReturner()' % name
         v1 = 'multipleValueReturner!'
         v2 = 2
         yield Return( v1, v2 )
+
 
     def subcoroutinesTest( name ):
         print '%s subcoroutinesTest()' % name
@@ -283,17 +281,24 @@ if __name__ == '__main__':
 
         print '%s Sleep( %d )' % (name, ms)
         yield Sleep( ms )
-
         yield Return( name, v, v1, v2 )
-        print 'never print it'
+
 
     class TaskReturnValueTest( QObject ):
         def slotDone( self, res ):
             print 'slotDone():', res.value
 
+
+
+    a = QApplication( sys.argv )
+    s = Scheduler( a )
+
+    # call QApplication.quit() when all coroutines done
+    s.done.connect( a.quit )
+
     d = TaskReturnValueTest()
 
-    # start 3 tasks
+    # start tasks
     for i in range( 0, 3 ):
         t = s.newTask( subcoroutinesTest('task %d' % i) )
         t.done.connect( d.slotDone )
