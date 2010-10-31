@@ -17,7 +17,7 @@ You could write PyQt asynchronous code in the synchronous manner:
                 # Let qt event loop to process pending events.
                 #
                 # This is not QCoreApplication.processEvents()!
-                # We will normally return to event loop.
+                # We will return to the main qt event loop.
     
                 yield
         except:
