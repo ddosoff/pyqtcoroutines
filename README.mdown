@@ -29,8 +29,8 @@ PyQt asynchronous code in the synchronous manner:
     # create scheduler to execute our inserter(..) later
     s = Scheduler()
 
-    # It's not the function call. 
-    # We construct python Generator object.
+    # It's not the function call, 
+    # we construct python Generator object!
     #
     # Execution will start after the first 
     # coroutine.send( None ) call inside the Scheduler.
