@@ -1,4 +1,4 @@
-# People likes to think synchronously. Computers must work asynchronously. #
+# People like to think synchronously. Computers must work asynchronously. #
 
 We could build asynchronous [operating system](http://www.dabeaz.com/coroutines/Coroutines.pdf) inside the python script
 using [yield](http://stackoverflow.com/questions/231767/the-python-yield-keyword-explained) keyword.  
