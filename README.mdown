@@ -37,7 +37,8 @@ You could write PyQt asynchronous code in the synchronous manner:
 
 
 We could execute blocking calls asynchronously!
-Just inherit from pyqtcoroutines.SystemCall class.
+Just [inherit](http://github.com/ddosoff/pyqtcoroutines/blob/master/qtcoroutines.py#L61) from 
+[pyqtcoroutines.SystemCall](http://github.com/ddosoff/pyqtcoroutines/blob/master/qtcoroutines.py#L51) class.
 
     def coroutine():
         print 'sleep 1 sec..'
