@@ -4,10 +4,15 @@ Impressed with excelent
 David Beazley [python coroutines](http://www.dabeaz.com/coroutines/) course, 
 I wrote PyQt4 based coroutines scheduler.
 
-You could write PyQt asynchronous code in the synchronous manner:
+We could use python [yield](http://stackoverflow.com/questions/231767/the-python-yield-keyword-explained) 
+for building 'operating system' inside the python script.
+
+Use ['yield'](http://stackoverflow.com/questions/231767/the-python-yield-keyword-explained) 
+for the execution trap, 'res = yield SomeClass()' for the system call or return.
+
+PyQt asynchronous code in the synchronous manner:
 
     from pyqtcoroutines import Scheduler
-
 
     # Coroutine is a special python function/generator with yield's,
     # where we could trap execution and process qt events.
@@ -31,10 +36,9 @@ You could write PyQt asynchronous code in the synchronous manner:
     # create scheduler
     s = Scheduler()
 
-    # It's not the function call. We construct python Generator object.
-    #
-    # Yield keyword explanation 
-    # http://stackoverflow.com/questions/231767/the-python-yield-keyword-explained
+    # It's not the function call. 
+    # We construct python Generator object.
+    # Execution starts after the first coroutine.send( None ) call.
     coroutine = sqlInserter( aLotOfrecords )
 
     # Execution will be started in the first 
