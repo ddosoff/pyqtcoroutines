@@ -13,7 +13,7 @@ PyQt asynchronous code in the synchronous manner:
             for record in a_lot_of_records:
                 # do small piece of work here 
 
-                ... insert record to the sql database ...
+                ... insert one record to the sql database ...
     
                 # This is execution trap
                 #
