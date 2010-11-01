@@ -16,11 +16,12 @@ PyQt asynchronous code in the synchronous manner:
         try:
             for record in a_lot_of_records:
                 # do small piece of work here 
-                ... insert record to the sql ...
+
+                ... insert record to the sql database ...
     
                 # This is execution trap!
                 #
-                # Unlike QCoreApplication.processEvents(),
+                # Unlike QCoreApplication.processEvents() call,
                 # we will NORMALLY return to the main qt event loop.
     
                 yield
