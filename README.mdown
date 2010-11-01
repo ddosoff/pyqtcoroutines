@@ -36,6 +36,14 @@ You could write PyQt asynchronous code in the synchronous manner:
     s.newTask( sqlInserter(records) )
 
 
+We could execute blocking calls asynchronously!
+Just inherit from pyqtcoroutines.SystemCall class.
+
+    def coroutine():
+        print 'sleep 1 sec..'
+        yield Sleep( 1000 )
+        print 'hello'
+
 
 In addition to subcoroutines and system call ideas,
 I added 'yield Return(..)' pattern.
