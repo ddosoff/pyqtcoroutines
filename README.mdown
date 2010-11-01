@@ -2,7 +2,7 @@
 
 We could use python [yield](http://stackoverflow.com/questions/231767/the-python-yield-keyword-explained) 
 to build ['operating system'](http://www.dabeaz.com/coroutines/Coroutines.pdf) inside the python script.  
-Use **yield** as execution trap, **res = yield SomeClass()** as system call.
+Just **yield** as execution trap or **res = yield SomeClass()** as system call.
 
 PyQt asynchronous code in the synchronous manner:
 
