@@ -51,7 +51,7 @@ Just [inherit](http://github.com/ddosoff/pyqtcoroutines/blob/master/qtcoroutines
         print 'hello'
 
 
-In addition to subcoroutines and system call ideas,
+In addition to subcoroutines and system call [David's](http://www.dabeaz.com/coroutines/) ideas,
 I added 'yield Return(..)' pattern.
 
 
