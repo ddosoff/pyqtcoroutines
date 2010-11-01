@@ -42,8 +42,8 @@ PyQt asynchronous code in the synchronous manner:
 
 
 We could execute blocking calls asynchronously!
-Just [inherit](http://github.com/ddosoff/pyqtcoroutines/blob/master/qtcoroutines.py#L61) from 
-[pyqtcoroutines.SystemCall](http://github.com/ddosoff/pyqtcoroutines/blob/master/qtcoroutines.py#L51) class.
+Just [inherit](http://github.com/ddosoff/pyqtcoroutines/blob/master/qtcoroutines.py#L64) from 
+[pyqtcoroutines.SystemCall](http://github.com/ddosoff/pyqtcoroutines/blob/master/qtcoroutines.py#L54) class.
 
     def async_sleeper():
         print 'sleep 1 sec..'
