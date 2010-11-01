@@ -2,7 +2,7 @@
 
 We could use python [yield](http://stackoverflow.com/questions/231767/the-python-yield-keyword-explained) 
 to build ['operating system'](http://www.dabeaz.com/coroutines/Coroutines.pdf) inside the python script.  
-Just **yield** as execution trap or **res = yield SomeClass()** as system call.
+Just **yield** as execution trap or **res = yield SomeClass()** as a system call.
 
 PyQt asynchronous code in the synchronous manner:
 
@@ -15,14 +15,14 @@ PyQt asynchronous code in the synchronous manner:
 
                 ... insert record to the sql database ...
     
-                # This is execution trap!
+                # This is execution trap
                 #
                 # Unlike QCoreApplication.processEvents() call,
-                # we will NORMALLY return to the main qt event loop.
+                # we will NORMALLY return to the main qt event loop!
     
                 yield
         except:
-            # handle all exceptions in synchronous manner!
+            # handle all exceptions in synchronous manner
             ...
     
     
@@ -31,6 +31,7 @@ PyQt asynchronous code in the synchronous manner:
 
     # It's not the function call. 
     # We construct python Generator object.
+    #
     # Execution will start after the first 
     # coroutine.send( None ) call inside the Scheduler.
     coroutine = inserter( a_lot_of_records )
