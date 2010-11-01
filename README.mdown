@@ -46,8 +46,8 @@ Just [inherit](http://github.com/ddosoff/pyqtcoroutines/blob/master/qtcoroutines
 [pyqtcoroutines.SystemCall](http://github.com/ddosoff/pyqtcoroutines/blob/master/qtcoroutines.py#L54) class.
 
     def async_sleeper():
-        print 'sleep 1000ms..'
-        yield Sleep( 1000 )
+        print 'sleep 1 sec..'
+        yield Sleep( 1000 )  # 1 sec == 1000 milliseconds
         print 'hello'
 
 
