@@ -65,4 +65,4 @@ I added 'yield Return(..)' pattern.
 
 Check out working example:
 
-$ **python [./qtcoroutines.py](http://github.com/ddosoff/pyqtcoroutines/blob/master/qtcoroutines.py)**
+$ **python [./qtcoroutines.py](http://github.com/ddosoff/pyqtcoroutines/blob/master/qtcoroutines.py#L252)**
