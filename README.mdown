@@ -12,18 +12,16 @@ PyQt asynchronous code in the synchronous manner:
 
     from pyqtcoroutines import Scheduler
 
-    # Coroutine is a special python function/generator with yield's,
-    # where we could trap execution and process qt events.
-    def sqlInserter( aLotOfrecords ):
+    def inserter( a_lot_of_records ):
         try:
-            for record in aLotOfrecords:
+            for record in a_lot_of_records:
                 # do small piece of work here 
-                ...
+                ... insert record to the sql ...
     
-                # Let qt event loop to process pending events.
+                # This is execution trap!
                 #
-                # This is not QCoreApplication.processEvents()!
-                # We will return to the main qt event loop.
+                # Unlike QCoreApplication.processEvents(),
+                # we will NORMALLY return to the main qt event loop.
     
                 yield
         except:
@@ -36,11 +34,11 @@ PyQt asynchronous code in the synchronous manner:
 
     # It's not the function call. 
     # We construct python Generator object.
-    # Execution starts after the first coroutine.send( None ) call.
-    coroutine = sqlInserter( aLotOfrecords )
+    # Execution will start after the first 
+    # coroutine.send( None ) call inside the Scheduler.
+    coroutine = inserter( a_lot_of_records )
 
-    # Execution will be started in the first 
-    # scheduler timer tick inside qt event loop.
+    # Create and start 'task' from coroutine.
     s.newTask( coroutine )
 
 
