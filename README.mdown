@@ -6,9 +6,9 @@ I wrote PyQt4 based coroutines scheduler.
 
 We could use python [yield](http://stackoverflow.com/questions/231767/the-python-yield-keyword-explained) 
 to build 'operating system' inside the python script.  
-Use **yield** as execution trap, **res = yield SomeClass()** as system call or return.
+Use **yield** as execution trap, **res = yield SomeClass()** as system call.
 
-PyQt asynchronous code in the synchronous manner:
+Asynchronous code in the synchronous manner:
 
     from pyqtcoroutines import Scheduler
 
