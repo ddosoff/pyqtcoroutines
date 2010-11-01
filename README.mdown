@@ -28,14 +28,15 @@ You could write PyQt asynchronous code in the synchronous manner:
     # create scheduler
     s = Scheduler()
 
-    # sqlInserter(records) - NOT A FUNCTION CALL. It's constructor.
+    # It's not the function call. It's constructor of python Generator object.
+    #
     # Yield keyword explanation 
     # http://stackoverflow.com/questions/231767/the-python-yield-keyword-explained
-    # It creates python Generator object.
-    #
+    coroutine = sqlInserter
+
     # Execution will be started in the first 
     # scheduler timer tick inside qt event loop.
-    s.newTask( sqlInserter(records) )
+    s.newTask( coroutine )
 
 
 We could execute blocking calls asynchronously!
