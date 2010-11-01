@@ -27,6 +27,10 @@ You could write PyQt asynchronous code in the synchronous manner:
     
     # create scheduler and run coroutine as task
     s = Scheduler()
+    # When we wrote 'sqlInserter(records)' we create Generator object.
+    # This is NOT FUNCTION CALL.
+    #
+    # Execution will be started after first scheduler timer tick.
     s.newTask( sqlInserter(records) )
 
 
