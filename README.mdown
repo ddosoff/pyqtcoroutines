@@ -6,6 +6,9 @@ I wrote PyQt4 based coroutines scheduler.
 
 You could write PyQt asynchronous code in the synchronous manner:
 
+    from pyqtcoroutines import Scheduler
+
+
     # Coroutine is a special python function/generator with yield's,
     # where we could trap execution and process qt events.
     def sqlInserter( aLotOfrecords ):
