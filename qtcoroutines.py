@@ -48,6 +48,9 @@ class Return( object ):
 
 
 # Base system call
+#
+# We just need 'SystemCall' base class for
+# detecting system calls inside the scheduler code.
 class SystemCall( QObject ):
     def handle( self ):
         raise Exception( 'Not Implemented' )
@@ -61,16 +64,27 @@ class SystemCall( QObject ):
 class Sleep( SystemCall ):
     def __init__( self, ms ):
         SystemCall.__init__( self )
+        # save params for the future use
         self.ms = ms
 
 
     def handle( self ):
-        self.startTimer( self.ms )
+        # QObject is the QT library class. SytemCall inherits QObject.
+        # QObject.timerEvent will be called after self.ms milliseconds
+        QObject.startTimer( self, self.ms )
 
 
+    # This is overloaded QObject.timerEvent
+    # and will be called by the Qt event loop.
     def timerEvent( self, e ):
+        # self.task was set inside the Scheduler code
+        # We set 'None' as return value from 'yield Sleep( .. )'
         self.task.sendval = None
+
+        # Wake up execution of caller's task
         self.scheduler.schedule( self.task )
+
+        # We do not need SystemCall instance later
         self.deleteLater()
 
 
