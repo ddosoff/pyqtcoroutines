@@ -1,8 +1,8 @@
 # People likes to think synchronously. Computers must work asynchronously. #
 
-We could use python [yield](http://stackoverflow.com/questions/231767/the-python-yield-keyword-explained) 
-to build asynchronous [operating system](http://www.dabeaz.com/coroutines/Coroutines.pdf) inside the python script.  
-Using **yield** as execution trap or **res = yield SomeClass()** as a system call.
+We could build asynchronous [operating system](http://www.dabeaz.com/coroutines/Coroutines.pdf) inside the python script
+using python [yield](http://stackoverflow.com/questions/231767/the-python-yield-keyword-explained) keyword.
+Simple **yield** as the execution trap or **res = yield SomeClass()** as a system call.
 
 PyQt asynchronous code in the synchronous manner:
 
