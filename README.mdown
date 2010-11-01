@@ -36,7 +36,7 @@ PyQt asynchronous code in the synchronous manner:
     # coroutine.send( None ) call inside the Scheduler.
     coroutine = inserter( a_lot_of_records )
 
-    # Let Scheduler starts execution of inserter(..) 
+    # Let the Scheduler to start execution of our inserter(..) 
     # inside the main qt event loop!
     s.newTask( coroutine )
 
