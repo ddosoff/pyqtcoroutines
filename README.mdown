@@ -28,7 +28,9 @@ You could write PyQt asynchronous code in the synchronous manner:
     # create scheduler
     s = Scheduler()
 
-    # sqlInserter(records) - NOT FUNCTION CALL.
+    # sqlInserter(records) - NOT A FUNCTION CALL. It's constructor.
+    # Yield keyword explanation 
+    # http://stackoverflow.com/questions/231767/the-python-yield-keyword-explained
     # It creates python Generator object.
     #
     # Execution will be started in the first 
