@@ -76,6 +76,23 @@ I added **yield Return(..)** pattern.
         ...
 
 
+Using [Qt signals](http://doc.trolltech.com/4.7/signalsandslots.html) feature we could return 
+value from Task using [signal done(..)](http://github.com/ddosoff/pyqtcoroutines/blob/master/qtcoroutines.py#L94)
+
+
+    def coroutine():
+        ... calc return value to res...
+        yield Return( res )
+
+    # QLabel widget provides a text or image display.
+    l = QLabel()
+    s = Scheduler()
+    t = s.newTask( coroutine() )
+
+    # text will be set when coroutine done
+    t.done.connect( l.setText )
+
+
 We have asynchronous multiplexing application with the only **one thread**.  
 Do not care about threads, processes, ipc, syncronization primitives and hard debuging.
 
