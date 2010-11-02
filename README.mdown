@@ -57,8 +57,11 @@ I added **yield Return(..)** pattern.
 
 
     def subcoroutine():
-        # Network operations will be asyncronous inside DownloadSite.handle, 
+        # Network operations will be asyncronous,
         # but logic looks synchronous!
+        #
+        # After the download compleete, QT will notify DownloadSite with the signal
+        # and execution of this Task will be resumed. 
         myWork = yield DownloadSite( 'http://google.com' )
 
         # Simply return value to caller's coroutine
