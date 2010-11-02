@@ -19,7 +19,8 @@ Write [PyQt](http://www.riverbankcomputing.co.uk/software/pyqt/intro) asynchrono
     
                 # This is execution trap
                 #
-                # Unlike QCoreApplication.processEvents() call,
+                # Unlike QCoreApplication.processEvents() 
+                # we do not call new event loop,
                 # we will NORMALLY RETURN to the main qt event loop!
     
                 yield
