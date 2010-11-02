@@ -79,6 +79,6 @@ I added **yield Return(..)** pattern.
 We have asynchronous multiplexing application with the only **one thread**.  
 Do not care about threads, processes, ipc, syncronization primitives and hard debuging.
 
-Check out working example:
+Check out working examples:
 
 $ **python [./qtcoroutines.py](http://github.com/ddosoff/pyqtcoroutines/blob/master/qtcoroutines.py#L252)**
