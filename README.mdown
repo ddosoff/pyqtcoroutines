@@ -57,10 +57,11 @@ I added 'yield Return(..)' pattern.
 
 
     def subcoroutine():
-        # DownloadSite - SystemCall derived class
-        # All network operations will be asyncronous, 
+        # Network operations will be asyncronous inside DownloadSite.handle, 
         # but logic looks synchronous!
         myWork = yield DownloadSite( 'http://google.com' )
+
+        # Simply return value to caller's coroutine
         yield Return( myWork )
     
     
