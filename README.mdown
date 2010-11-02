@@ -1,7 +1,7 @@
 # People like to think synchronously. Computers must work asynchronously. #
 
-This is implementation of [nonpreemptive](http://en.wikipedia.org/wiki/Nonpreemptive_multitasking) multitasking 
-[operating system](http://www.dabeaz.com/coroutines/Coroutines.pdf) inside the python script
+This is implementation of [nonpreemptive multitasking](http://en.wikipedia.org/wiki/Nonpreemptive_multitasking)
+inside the python script
 using [yield](http://stackoverflow.com/questions/231767/the-python-yield-keyword-explained) keyword.  
 Insert **yield** as the execution trap or **res = yield SomeClass()** as the asynchronous call.
  
@@ -45,11 +45,11 @@ Write [PyQt](http://www.riverbankcomputing.co.uk/software/pyqt/intro) asynchrono
 
 We could execute blocking calls asynchronously!
 Just [inherit class Sleep](http://github.com/ddosoff/pyqtcoroutines/blob/master/qtcoroutines.py#L64) from 
-[pyqtcoroutines.SystemCall](http://github.com/ddosoff/pyqtcoroutines/blob/master/qtcoroutines.py#L54) class.
+[pyqtcoroutines.AsynchronousCall](http://github.com/ddosoff/pyqtcoroutines/blob/master/qtcoroutines.py#L54) class.
 
     def async_sleeper():
         print 'sleep 1 sec..'
-        # Sleep - class, inherited from SystemCall
+        # Sleep - class, inherited from AsynchronousCall
         yield Sleep( 1000 )  # 1 sec == 1000 milliseconds
         print 'hello'
 

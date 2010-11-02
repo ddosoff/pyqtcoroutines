@@ -49,9 +49,9 @@ class Return( object ):
 
 # Base system call
 #
-# We just need 'SystemCall' base class for
+# We just need 'AsynchronousCall' base class for
 # detecting system calls inside the scheduler code.
-class SystemCall( QObject ):
+class AsynchronousCall( QObject ):
     def handle( self ):
         raise Exception( 'Not Implemented' )
 
@@ -61,9 +61,9 @@ class SystemCall( QObject ):
 #
 # Usage:
 #   yield Sleep( 100 )   # sleep 100ms
-class Sleep( SystemCall ):
+class Sleep( AsynchronousCall ):
     def __init__( self, ms ):
-        SystemCall.__init__( self )
+        AsynchronousCall.__init__( self )
         # save params for the future use
         self.ms = ms
 
@@ -84,7 +84,7 @@ class Sleep( SystemCall ):
         # Wake up execution of caller's task
         self.scheduler.schedule( self.task )
 
-        # We do not need SystemCall instance later
+        # We do not need AsynchronousCall instance later
         self.deleteLater()
 
 
@@ -125,8 +125,8 @@ class Task( QObject ):
                     # go back to the scheduler
                     return
 
-                # yield SystemCall(..)
-                if isinstance( self.result, SystemCall ): 
+                # yield AsynchronousCall(..)
+                if isinstance( self.result, AsynchronousCall ): 
                     # handled by scheduler
                     return self.result
 
@@ -236,12 +236,12 @@ class Scheduler( QObject ):
                 
                 timeout = self.checkRuntime( task )
           
-                if isinstance( result, SystemCall ):
+                if isinstance( result, AsynchronousCall ):
                     # save task to result and process it 
                     result.task = task
                     result.scheduler = self
                     result.handle()
-                    # SystemCall will resume execution 
+                    # AsynchronousCall will resume execution 
                     # this task to ready queue
                     continue
             except Exception as e:
