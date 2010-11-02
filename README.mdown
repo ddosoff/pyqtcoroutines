@@ -65,7 +65,7 @@ I added 'yield Return(..)' pattern.
         yield Return( myWork )
     
     
-    def task():
+    def coroutine():
         value = yield subcoroutine()
         ...
 
