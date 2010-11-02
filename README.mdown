@@ -42,11 +42,12 @@ Write [PyQt](http://www.riverbankcomputing.co.uk/software/pyqt/intro) asynchrono
 
 
 We could execute blocking calls asynchronously!
-Just [inherit](http://github.com/ddosoff/pyqtcoroutines/blob/master/qtcoroutines.py#L64) from 
+Just [inherit class Sleep](http://github.com/ddosoff/pyqtcoroutines/blob/master/qtcoroutines.py#L64) from 
 [pyqtcoroutines.SystemCall](http://github.com/ddosoff/pyqtcoroutines/blob/master/qtcoroutines.py#L54) class.
 
     def async_sleeper():
         print 'sleep 1 sec..'
+        # Sleep - class, inherited from SystemCall
         yield Sleep( 1000 )  # 1 sec == 1000 milliseconds
         print 'hello'
 
@@ -56,7 +57,10 @@ I added 'yield Return(..)' pattern.
 
 
     def subcoroutine():
-        ...
+        # DownloadSite - SystemCall derived class
+        # All network operations will be asyncronous, 
+        # but logic looks synchronous!
+        myWork = yield DownloadSite( 'http://google.com' )
         yield Return( myWork )
     
     
