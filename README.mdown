@@ -3,7 +3,7 @@
 This is implementation of [nonpreemptive](http://en.wikipedia.org/wiki/Nonpreemptive_multitasking) multitasking 
 [operating system](http://www.dabeaz.com/coroutines/Coroutines.pdf) inside the python script
 using [yield](http://stackoverflow.com/questions/231767/the-python-yield-keyword-explained) keyword.  
-Insert **yield** as the execution trap or **res = yield SomeClass()** as the asynchronous call.  
+Insert **yield** as the execution trap or **res = yield SomeClass()** as the asynchronous call (system call).  
  
 
 Write [PyQt](http://www.riverbankcomputing.co.uk/software/pyqt/intro) asynchronous code in the synchronous manner:
