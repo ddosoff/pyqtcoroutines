@@ -62,8 +62,9 @@ I added **yield Return(..)** pattern.
         # Network operations will be asyncronous,
         # but logic looks synchronous!
         #
-        # After the download compleete, QT will notify DownloadSite with the signal
-        # and execution of this Task will be resumed. 
+        # After the download compleete, QT will notify 
+        # DownloadSite instance with the signal
+        # and execution will be resumed. 
         myWork = yield DownloadSite( 'http://google.com' )
 
         # Simply return value to caller's coroutine
