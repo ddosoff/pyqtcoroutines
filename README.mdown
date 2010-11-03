@@ -93,6 +93,23 @@ value from Task using [signal done(..)](http://github.com/ddosoff/pyqtcoroutines
     t.done.connect( l.setText )
 
 
+Scheduler will route exception raised in the subcoroutines!
+
+
+    def subcoroutine():
+        ... yield ... yield ...
+        raise Exception( 'Something wrong' )
+        ... yield ... yield ...
+
+
+    def coroutine():
+        try:
+            yield subcoroutine()
+        except:
+            # Something wrong will catched here!
+            ...
+
+
 We have asynchronous multiplexing application with the only **one thread**.  
 Do not care about threads, processes, ipc, syncronization primitives and hard debuging.
 

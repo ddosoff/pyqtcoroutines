@@ -99,6 +99,7 @@ class Task( QObject ):
         self.stack = deque()          # stack for subcoroutines
         self.coroutine = coroutine    # task coroutine / top subcoroutine
         self.sendval = None           # value to send into coroutine
+        self.exception = None         # save exceptions here
         self.result = Return( None )  # default return value
 
 
@@ -117,8 +118,12 @@ class Task( QObject ):
                 return
 
             try:
-                # save result into self to protect from gc
-                self.result = self.coroutine.send( self.sendval )
+                if self.exception:
+                    self.result = self.coroutine.throw( self.exception )
+                    self.exception = None
+                else:
+                    # save result into self to protect from gc
+                    self.result = self.coroutine.send( self.sendval )
 
                 # simple trap? (yield)
                 if self.result is None:
@@ -159,7 +164,15 @@ class Task( QObject ):
                 self.sendval = self.result.value
                 del self.coroutine
                 self.coroutine = self.stack.pop()
+            except Exception, e:
+                if not self.stack:
+                    # exceptions must be handled in the Task coroutine
+                    raise
 
+                self.exception = e
+                del self.coroutine
+                self.coroutine = self.stack.pop()
+                
 
 
 class Scheduler( QObject ):
@@ -244,7 +257,7 @@ class Scheduler( QObject ):
                     # AsynchronousCall will resume execution 
                     # this task to ready queue
                     continue
-            except Exception as e:
+            except Exception, e:
                 timeout = self.checkRuntime( task )
 
                 task.deleteLater()
@@ -280,22 +293,36 @@ if __name__ == '__main__':
         print '%s multipleValueReturner()' % name
         v1 = 'multipleValueReturner!'
         v2 = 2
+
+        # exception test
+        if not random.randint( 0, 3 ):
+            raise Exception( 'multipleValueReturner ooops!' )
+
         yield Return( v1, v2 )
 
 
     def subcoroutinesTest( name ):
-        print '%s subcoroutinesTest()' % name
-        v1, v2 = yield multipleValueReturner( name )
-        v = yield valueReturner( name )
-
-        print '%s v = %s, v1 = %s, v2 = %s' % (name, v, v1, v2)
 
         # Sleep system call example
         ms = random.randint( 1000, 2000 )
-
         print '%s Sleep( %d )' % (name, ms)
         yield Sleep( ms )
-        yield Return( name, v, v1, v2 )
+
+        # exception test
+        try:
+            print '%s subcoroutinesTest()' % name
+
+            # return values and subcoroutines test
+            v1, v2 = yield multipleValueReturner( name )
+            v = yield valueReturner( name )
+        except Exception, e:
+            print "%s exception '%s' handled!" % (name, e )
+        else:
+            print '%s v = %s, v1 = %s, v2 = %s' % (name, v, v1, v2)
+
+            # signal done test
+            yield Return( name, v, v1, v2 )
+
 
 
     class TaskReturnValueTest( QObject ):
