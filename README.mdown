@@ -76,8 +76,8 @@ I added **yield Return(..)** pattern.
         ...
 
 
-Using [Qt signals](http://doc.trolltech.com/4.7/signalsandslots.html) feature we could return 
-value from Task using [signal done(..)](http://github.com/ddosoff/pyqtcoroutines/blob/master/qtcoroutines.py#L94)
+**Using [Qt signals](http://doc.trolltech.com/4.7/signalsandslots.html) feature we could return 
+value from Task** using [signal done(..)](http://github.com/ddosoff/pyqtcoroutines/blob/master/qtcoroutines.py#L94)
 
 
     def coroutine():
@@ -93,7 +93,7 @@ value from Task using [signal done(..)](http://github.com/ddosoff/pyqtcoroutines
     t.done.connect( l.setText )
 
 
-Scheduler will route exception raised in the subcoroutines!
+**Scheduler will route exceptions** raised in the subcoroutines!
 
 
     def subcoroutine():
@@ -106,7 +106,7 @@ Scheduler will route exception raised in the subcoroutines!
         try:
             yield subcoroutine()
         except:
-            # Something wrong will catched here!
+            # 'Something wrong' will be catched!
             ...
 
 
