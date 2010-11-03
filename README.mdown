@@ -87,10 +87,10 @@ value from Task** using [signal done(..)](http://github.com/ddosoff/pyqtcoroutin
     # QLabel widget provides a text or image display.
     l = QLabel()
     s = Scheduler()
-    t = s.newTask( coroutine() )
+    task = s.newTask( coroutine() )
 
     # text will be set when coroutine done
-    t.done.connect( l.setText )
+    task.done.connect( l.setText )
 
 
 **Scheduler will route exceptions** raised in the subcoroutines!
