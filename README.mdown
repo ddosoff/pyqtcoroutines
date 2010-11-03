@@ -44,7 +44,7 @@ Write [PyQt](http://www.riverbankcomputing.co.uk/software/pyqt/intro) asynchrono
     s.newTask( coroutine )
 
 
-We could execute blocking calls asynchronously!
+We could **execute blocking calls asynchronously**!
 Just [inherit class Sleep](http://github.com/ddosoff/pyqtcoroutines/blob/master/qtcoroutines.py#L64) from 
 [pyqtcoroutines.AsynchronousCall](http://github.com/ddosoff/pyqtcoroutines/blob/master/qtcoroutines.py#L54).
 
@@ -76,7 +76,7 @@ I added **yield Return(..)** pattern.
         ...
 
 
-**Using [Qt signals](http://doc.trolltech.com/4.7/signalsandslots.html) feature we could return 
+**With the [Qt signals](http://doc.trolltech.com/4.7/signalsandslots.html) feature we could return 
 value from Task** using [signal done(..)](http://github.com/ddosoff/pyqtcoroutines/blob/master/qtcoroutines.py#L94)
 
 
