@@ -116,3 +116,5 @@ Do not care about threads, processes, ipc, syncronization primitives and hard de
 Check out working examples:
 
 $ **python [./qtcoroutines.py](http://github.com/ddosoff/pyqtcoroutines/blob/master/qtcoroutines.py#L252)**
+
+P.S. You are welcome to commit your AsychronousCall inherited classes!
