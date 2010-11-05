@@ -71,12 +71,14 @@ class Sleep( AsynchronousCall ):
     def handle( self ):
         # QObject is the QT library class. SytemCall inherits QObject.
         # QObject.timerEvent will be called after self.ms milliseconds
+        print self.task, 'startTimer', self.ms
         QObject.startTimer( self, self.ms )
 
 
     # This is overloaded QObject.timerEvent
     # and will be called by the Qt event loop.
     def timerEvent( self, e ):
+        print self.task, 'timerEvent'
         # self.task was set inside the Scheduler code
         # We set 'None' as return value from 'yield Sleep( .. )'
         self.task.sendval = None
@@ -111,12 +113,7 @@ class Task( QObject ):
 
     # Run a task until it hits the next yield statement
     def run( self ):
-        i = 0
-        while True:
-            i += 1
-            if i > MAX_TASK_ITERATIONS:
-                return
-
+        for i in xrange( MAX_TASK_ITERATIONS ):
             try:
                 if self.exception:
                     self.result = self.coroutine.throw( self.exception )
@@ -150,6 +147,7 @@ class Task( QObject ):
                 # Unknown result type!?
                 raise TypeError( '%s\n\nWrong type %s yielded.' % \
                                  (self.formatBacktrace(), type(self.result)) )
+
             except StopIteration:
                 if not isinstance( self.result, Return ):
                     # replace previous yield
@@ -164,6 +162,7 @@ class Task( QObject ):
                 self.sendval = self.result.value
                 del self.coroutine
                 self.coroutine = self.stack.pop()
+
             except Exception, e:
                 if not self.stack:
                     # exceptions must be handled in the Task coroutine
@@ -234,14 +233,12 @@ class Scheduler( QObject ):
     # scheduler loop!
     def timerEvent( self, e ):
         # Do not iterate too much.. 
-        i = 0
         self.startIterationTime = datetime.datetime.now()
         self.lastIterationTime = self.startIterationTime
         timeout = False
-        while self.ready and not timeout:
-            i += 1
-            if i > MAX_SCHEDULER_ITERATIONS:
-                return
+        for i in xrange( MAX_SCHEDULER_ITERATIONS ):
+            if timeout:
+                break
 
             task = self.ready.pop()
             try:
@@ -254,25 +251,31 @@ class Scheduler( QObject ):
                     result.task = task
                     result.scheduler = self
                     result.handle()
-                    # AsynchronousCall will resume execution 
-                    # this task to ready queue
-                    continue
+                    # AsynchronousCall will resume execution later
+                    if not self.ready:
+                        break
+                     
             except Exception, e:
                 timeout = self.checkRuntime( task )
 
                 task.deleteLater()
 
                 if isinstance( e, StopIteration ):
-                    continue
+                    if self.ready:
+                        continue
+                    else:
+                        break
                 else:
                     raise
 
-            # continue this task
+            # continue this task later
             self.ready.appendleft( task )
 
         if not self.ready:
             self.killTimer( self.timerId )
             self.timerId = None
+            return
+
 
 
 
@@ -295,7 +298,7 @@ if __name__ == '__main__':
         v2 = 2
 
         # exception test
-        if not random.randint( 0, 3 ):
+        if not random.randint( 0, 2 ):
             raise Exception( 'multipleValueReturner ooops!' )
 
         yield Return( v1, v2 )
@@ -324,11 +327,9 @@ if __name__ == '__main__':
             yield Return( name, v, v1, v2 )
 
 
-
     class TaskReturnValueTest( QObject ):
         def slotDone( self, res ):
             print 'slotDone():', res.value
-
 
 
     a = QApplication( sys.argv )

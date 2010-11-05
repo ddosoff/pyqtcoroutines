@@ -8,7 +8,7 @@ Insert **yield** as the execution trap or **res = yield SomeClass()** as the asy
 
 Write [PyQt](http://www.riverbankcomputing.co.uk/software/pyqt/intro) asynchronous code in the synchronous manner:
 
-    from pyqtcoroutines import Scheduler
+    from pyqtcoroutines.coroutines import Scheduler
 
     def inserter( a_lot_of_records ):
         try:
@@ -116,5 +116,3 @@ Do not care about threads, processes, ipc, syncronization primitives and hard de
 Check out working examples:
 
 $ **python [./qtcoroutines.py](http://github.com/ddosoff/pyqtcoroutines/blob/master/qtcoroutines.py#L252)**
-
-P.S. You are welcome to commit your AsychronousCall inherited classes!
