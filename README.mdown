@@ -1,6 +1,6 @@
 # People like to think synchronously. Computers must work asynchronously. #
 
-This is implementation of [nonpreemptive multitasking](http://en.wikipedia.org/wiki/Nonpreemptive_multitasking)
+This is implementation of [nonpreemptive multithreading](http://en.wikipedia.org/wiki/Nonpreemptive_multithreading)
 inside the python script
 using [yield](http://stackoverflow.com/questions/231767/the-python-yield-keyword-explained) keyword.  
 Insert **yield** as the execution trap or **res = yield SomeClass()** as the asynchronous call.
