@@ -47,23 +47,21 @@ class Return( object ):
 
 
 
-# Base system call
-#
-# We just need 'AsynchronousCall' base class for
-# detecting system calls inside the scheduler code.
+# Inherit your asynchronous calls,
+# like Sleep below.
 class AsynchronousCall( QObject ):
     def handle( self ):
         raise Exception( 'Not Implemented' )
     
 
-    # will be called by scheduler, before handle call
+    # will be called by scheduler, before handle()
     def setContext( self, task, scheduler ):
         self.task = task
         self.scheduler = scheduler
 
 
 
-# System call example
+# Asynchronous call example
 #
 # Usage:
 #   yield Sleep( 100 )   # sleep 100ms
