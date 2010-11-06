@@ -54,6 +54,12 @@ class Return( object ):
 class AsynchronousCall( QObject ):
     def handle( self ):
         raise Exception( 'Not Implemented' )
+    
+
+    # will be called by scheduler, before handle call
+    def setContext( self, task, scheduler ):
+        self.task = task
+        self.scheduler = scheduler
 
 
 
@@ -71,14 +77,12 @@ class Sleep( AsynchronousCall ):
     def handle( self ):
         # QObject is the QT library class. SytemCall inherits QObject.
         # QObject.timerEvent will be called after self.ms milliseconds
-        print self.task, 'startTimer', self.ms
         QObject.startTimer( self, self.ms )
 
 
     # This is overloaded QObject.timerEvent
     # and will be called by the Qt event loop.
     def timerEvent( self, e ):
-        print self.task, 'timerEvent'
         # self.task was set inside the Scheduler code
         # We set 'None' as return value from 'yield Sleep( .. )'
         self.task.sendval = None
@@ -230,14 +234,14 @@ class Scheduler( QObject ):
         return False
 
 
-    # scheduler loop!
+    # The scheduler loop!
     def timerEvent( self, e ):
         # Do not iterate too much.. 
         self.startIterationTime = datetime.datetime.now()
         self.lastIterationTime = self.startIterationTime
         timeout = False
         for i in xrange( MAX_SCHEDULER_ITERATIONS ):
-            if timeout:
+            if timeout or not self.ready:
                 break
 
             task = self.ready.pop()
@@ -247,13 +251,11 @@ class Scheduler( QObject ):
                 timeout = self.checkRuntime( task )
           
                 if isinstance( result, AsynchronousCall ):
-                    # save task to result and process it 
-                    result.task = task
-                    result.scheduler = self
+                    result.setContext( task, self )
                     result.handle()
+
                     # AsynchronousCall will resume execution later
-                    if not self.ready:
-                        break
+                    continue
                      
             except Exception, e:
                 timeout = self.checkRuntime( task )
@@ -261,21 +263,25 @@ class Scheduler( QObject ):
                 task.deleteLater()
 
                 if isinstance( e, StopIteration ):
-                    if self.ready:
-                        continue
-                    else:
-                        break
-                else:
-                    raise
+                    continue
+
+                # this is unknown exception!
+                # do not lopp, if all tasks done
+                if not self.ready:
+                    self.killTimer( self.timerId )
+                    self.timerId = None
+                    return
+
+                raise
 
             # continue this task later
             self.ready.appendleft( task )
 
+        # do not lopp, if all tasks done
         if not self.ready:
             self.killTimer( self.timerId )
             self.timerId = None
             return
-
 
 
 

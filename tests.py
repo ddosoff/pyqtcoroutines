@@ -10,9 +10,10 @@
 # due to event looped qt application.
 import sys
 import traceback
+import datetime
 from collections import deque
 from PyQt4.QtCore import QCoreApplication, QObject, QTimer, pyqtSignal
-from qtcoroutines import Scheduler, Sleep
+from coroutines import Scheduler, Sleep
 
 
 class Test( QObject ):
@@ -37,12 +38,11 @@ class SleepTest( Test ):
 
 
         def sleeper( sleepMs ):
-            print 'sleeper( %d ): start' % sleepMs
             yield Sleep( sleepMs )
-            print 'sleeper( %d ): done' % sleepMs
 
 
         self.tasks = 0
+        self.start = datetime.datetime.now()
         for ms in ( 10, 0, 300, 100 ):
             self.tasks += 1
 
@@ -52,23 +52,44 @@ class SleepTest( Test ):
 
 
     def checkRuntime( self ):
-        print 'checkRuntime', self.sender()
+        task = self.sender()
         self.tasks -= 1
 
+        now = datetime.datetime.now()
+
+        # big time difference?
+        assert now - self.start - datetime.timedelta( milliseconds = task.ms ) < datetime.timedelta( milliseconds = 3 )
+
+        # no more sleeper's?
         if not self.tasks:
             self.done.emit()
 
 
 
 class Tester( QObject ):
-    def __init__( self ):
+    def __init__( self, scheduler ):
         QObject.__init__( self )
         self.tests = deque()
+        self.scheduler = scheduler
+        scheduler.done.connect( self.allDone )
+        self.deleteIteration = True
+        self.schedulerDone = False
         QTimer.singleShot( 0, self.nextTest )
 
 
     def nextTest( self ):
-        if not self.tests:
+        if not self.tests and self.deleteIteration:
+            print 'delete iteration'
+            self.deleteIteration = False
+            # scheduler should not sent done signal yet
+            assert not self.schedulerDone
+            # let qt deleteLater all tasks and stop the scheduler.
+            QTimer.singleShot( 10, self.nextTest )
+            return
+        elif not self.deleteIteration: 
+            print 'quit iteration'
+            assert not self.scheduler.tasks
+            assert self.schedulerDone
             print 'No more tests, bye bye.'
             QCoreApplication.instance().quit()
             return
@@ -78,6 +99,11 @@ class Tester( QObject ):
         self.test.done.connect( self.nextTest )
         print 'Run', self.test
         self.test.run()
+
+
+    def allDone( self ):
+        print 'Scheduler done!'
+        self.schedulerDone = True
 
 
     def addTest( self, test ):
@@ -104,6 +130,6 @@ class TestApp( QCoreApplication ):
 if __name__ == '__main__':
     a = TestApp()
     s = Scheduler()
-    tester = Tester()
+    tester = Tester( s )
     tester.addTest( SleepTest(s) )
     a.exec_()
