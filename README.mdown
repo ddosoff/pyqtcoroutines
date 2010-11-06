@@ -115,4 +115,4 @@ Do not care about threads, processes, ipc, syncronization primitives and hard de
 
 Check out working examples:
 
-$ **python [./coroutines.py](http://github.com/ddosoff/pyqtcoroutines/blob/master/coroutines.py#L252)**
+$ **python [./coroutines.py](http://github.com/ddosoff/pyqtcoroutines/blob/master/coroutines.py#L258)**

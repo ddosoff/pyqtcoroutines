@@ -66,6 +66,36 @@ class SleepTest( Test ):
 
 
 
+class ReturnValueTest( Test ):
+    pass
+
+
+
+class ReturnValuesTest( Test ):
+    pass
+
+
+
+class DoneReturnValueTest( Test ):
+    pass
+
+
+
+class DoneReturnValuesTest( Test ):
+    pass
+
+
+
+class SubcoroutinesTest( Test ):
+    pass
+
+
+
+class ExceptionRoutingTest( Test ):
+    pass
+
+
+
 class Tester( QObject ):
     def __init__( self, scheduler ):
         QObject.__init__( self )
