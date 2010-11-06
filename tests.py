@@ -58,7 +58,9 @@ class SleepTest( Test ):
         now = datetime.datetime.now()
 
         # big time difference?
-        assert now - self.start - datetime.timedelta( milliseconds = task.ms ) < datetime.timedelta( milliseconds = 3 )
+        mustInterval = datetime.timedelta( milliseconds = task.ms )
+        assert now - self.start > mustInterval
+        assert now - self.start < mustInterval + datetime.timedelta( milliseconds = 10 )
 
         # no more sleeper's?
         if not self.tasks:
@@ -105,11 +107,15 @@ class Tester( QObject ):
         self.deleteIteration = True
         self.schedulerDone = False
         QTimer.singleShot( 0, self.nextTest )
+        print 'Running tests:'
+        print
 
 
     def nextTest( self ):
         if not self.tests and self.deleteIteration:
-            print 'delete iteration'
+            print
+            print 'All tests done!'
+            print 'Delete iteration..'
             self.deleteIteration = False
             # scheduler should not sent done signal yet
             assert not self.schedulerDone
@@ -117,10 +123,9 @@ class Tester( QObject ):
             QTimer.singleShot( 10, self.nextTest )
             return
         elif not self.deleteIteration: 
-            print 'quit iteration'
             assert not self.scheduler.tasks
             assert self.schedulerDone
-            print 'No more tests, bye bye.'
+            print 'Bye bye.'
             QCoreApplication.instance().quit()
             return
 
@@ -132,7 +137,7 @@ class Tester( QObject ):
 
 
     def allDone( self ):
-        print 'Scheduler done!'
+        print 'Scheduler done.'
         self.schedulerDone = True
 
 
