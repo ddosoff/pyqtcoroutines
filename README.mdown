@@ -45,8 +45,8 @@ Write [PyQt](http://www.riverbankcomputing.co.uk/software/pyqt/intro) asynchrono
 
 
 We could **execute blocking calls asynchronously**!
-Just [inherit class Sleep](http://github.com/ddosoff/pyqtcoroutines/blob/master/coroutines.py#L70) from 
-[pyqtcoroutines.AsynchronousCall](http://github.com/ddosoff/pyqtcoroutines/blob/master/coroutines.py#L54).
+Just [inherit class Sleep](http://github.com/ddosoff/pyqtcoroutines/blob/master/coroutines.py#L68) from 
+[pyqtcoroutines.AsynchronousCall](http://github.com/ddosoff/pyqtcoroutines/blob/master/coroutines.py#L52).
 
     def async_sleeper():
         print 'sleep 100ms..'
@@ -77,7 +77,7 @@ I added **yield Return(..)** pattern.
 
 
 **With the [Qt signals](http://doc.trolltech.com/4.7/signalsandslots.html) feature we could return 
-value from Task** using [signal done(..)](http://github.com/ddosoff/pyqtcoroutines/blob/master/coroutines.py#L100)
+value from Task** using [signal done(..)](http://github.com/ddosoff/pyqtcoroutines/blob/master/coroutines.py#L98)
 
 
     def coroutine():
@@ -115,4 +115,4 @@ Do not care about threads, processes, ipc, syncronization primitives and hard de
 
 Check out working examples:
 
-$ **python [./coroutines.py](http://github.com/ddosoff/pyqtcoroutines/blob/master/coroutines.py#L288)**
+$ **python [./coroutines.py](http://github.com/ddosoff/pyqtcoroutines/blob/master/coroutines.py#L286)**
