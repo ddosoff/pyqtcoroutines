@@ -85,13 +85,16 @@ value from Task** using [signal done(..)](http://github.com/ddosoff/pyqtcoroutin
         ... calc return value to res...
         yield Return( res )
 
-    # QLabel widget provides a text or image display.
-    l = QLabel()
+    class MyClass( QObject ):
+        def resReady( self, res ):
+            print res.value
+
+    l = MyClass()
     s = Scheduler()
     task = s.newTask( coroutine() )
 
-    # text will be set when coroutine done
-    task.done.connect( l.setText )
+    # res will be printed, when coroutine done
+    task.done.connect( l.resReady )
 
 
 **Scheduler will route exceptions** raised in the subcoroutines!
