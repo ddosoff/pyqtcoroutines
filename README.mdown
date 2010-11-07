@@ -10,6 +10,7 @@ Write [PyQt](http://www.riverbankcomputing.co.uk/software/pyqt/intro) asynchrono
 
     from pyqtcoroutines.coroutines import Scheduler
 
+    # coroutine example
     def inserter( a_lot_of_records ):
         try:
             for record in a_lot_of_records:
@@ -20,7 +21,7 @@ Write [PyQt](http://www.riverbankcomputing.co.uk/software/pyqt/intro) asynchrono
                 # This is execution trap
                 #
                 # Unlike QCoreApplication.processEvents() 
-                # we do not call new event loop,
+                # we do not call new restricted event loop,
                 # we will NORMALLY RETURN to the main qt event loop!
     
                 yield
@@ -32,8 +33,8 @@ Write [PyQt](http://www.riverbankcomputing.co.uk/software/pyqt/intro) asynchrono
     # create scheduler to execute our inserter(..) later
     s = Scheduler()
 
-    # It's not the function call, 
-    # we construct python Generator object!
+    # It's not the inserter() call!
+    # We construct the built-in python Generator object!
     #
     # Execution will start after the first 
     # coroutine.send( None ) call inside the Scheduler.
