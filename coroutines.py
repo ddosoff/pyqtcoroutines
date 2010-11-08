@@ -264,12 +264,12 @@ class Scheduler( QObject ):
                     continue
 
                 # this is unknown exception!
-                # do not lopp, if all tasks done
+                # stop iterating timer, if all tasks done
                 if not self.ready:
                     self.killTimer( self.timerId )
                     self.timerId = None
-                    return
 
+                # forward exception to the main event loop
                 raise
 
             # continue this task later
