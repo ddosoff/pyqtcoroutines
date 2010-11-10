@@ -6,8 +6,8 @@
 # GNU LGPL v. 2.1
 # Kirill Kostuchenko <ddosoff@gmail.com>
 #
-# Sorry, we can't use elegance of the unittest,
-# due to event looped qt application.
+# Sorry, we can't use unittest,
+# due to qt event loop.
 import sys
 import traceback
 import datetime
