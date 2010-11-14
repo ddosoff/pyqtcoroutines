@@ -8,6 +8,7 @@
 
 import sys
 import datetime
+import traceback
 from collections import deque
 from types import GeneratorType
 from PyQt4.QtCore import QObject, QTimer, pyqtSignal
@@ -60,6 +61,18 @@ class AsynchronousCall( QObject ):
         self.scheduler = scheduler
 
 
+    # continue execution
+    def wakeup( self, result ):
+        # self.task was set inside the Scheduler code
+        self.task.sendval = result
+
+        # Wake up execution of the caller's task
+        self.scheduler.schedule( self.task )
+
+        # We do not need AsynchronousCall instance more
+        self.deleteLater()
+
+
 
 # Asynchronous call example
 #
@@ -81,15 +94,20 @@ class Sleep( AsynchronousCall ):
     # This is overloaded QObject.timerEvent
     # and will be called by the Qt event loop.
     def timerEvent( self, e ):
-        # self.task was set inside the Scheduler code
-        # We set 'None' as return value from 'yield Sleep( .. )'
-        self.task.sendval = None
+        self.wakeup( None )
 
-        # Wake up execution of caller's task
-        self.scheduler.schedule( self.task )
 
-        # We do not need AsynchronousCall instance later
-        self.deleteLater()
+
+# due to own Coroutines stack, we
+# must construct backtrace manually.
+class CoException( Exception ):
+    def __init__( self ):
+        self.tb = deque()
+
+    
+    def update( self, e ):
+        self.orig = e
+        self.tb.appendleft( traceback.format_tb( sys.exc_traceback )[-1] )
 
 
 
@@ -118,7 +136,7 @@ class Task( QObject ):
         for i in xrange( MAX_TASK_ITERATIONS ):
             try:
                 if self.exception:
-                    self.result = self.coroutine.throw( self.exception )
+                    self.result = self.coroutine.throw( self.exception.orig )
                     self.exception = None
                 else:
                     # save result into self to protect from gc
@@ -166,11 +184,16 @@ class Task( QObject ):
                 self.coroutine = self.stack.pop()
 
             except Exception, e:
+                if self.exception is None:
+                    self.exception = CoException()
+
+                # calc own backtrace
+                self.exception.update( e )
+
                 if not self.stack:
                     # exceptions must be handled in the Task coroutine
-                    raise
+                    raise self.exception
 
-                self.exception = e
                 del self.coroutine
                 self.coroutine = self.stack.pop()
                 
@@ -186,6 +209,7 @@ class Scheduler( QObject ):
         self.tasks = 0
         self.ready = deque()
         self.timerId = None
+        self.printCoException = True
 
 
     # Schedule coroutine as Task
@@ -262,6 +286,13 @@ class Scheduler( QObject ):
 
                 if isinstance( e, StopIteration ):
                     continue
+
+                if isinstance( e, CoException ) and self.printCoException:
+                    sys.stdout.write( '\nUNHANDLED COROUTINE EXCEPTION BACKTRACE (self.printCoException is True)!\n')
+                    for l in e.tb:
+                        sys.stdout.write( l )
+                    strExc = str(e.orig)
+                    sys.stdout.write( strExc + '\n' + '-' * len(strExc) + '\n\n' )
 
                 # this is unknown exception!
                 # stop iterating timer, if all tasks done
