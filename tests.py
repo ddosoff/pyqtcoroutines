@@ -11,18 +11,21 @@
 import sys
 import traceback
 import datetime
+import hotshot
+import hotshot.stats
 from collections import deque
 from PyQt4.QtCore import QCoreApplication, QObject, QTimer, pyqtSignal
 from coroutines import Scheduler, Sleep
 
 
 class Test( QObject ):
-    done = pyqtSignal()
-    error = pyqtSignal()
-
     def __init__( self, scheduler ):
         QObject.__init__( self )
         self.scheduler = scheduler
+
+
+    def prepare( self ):
+        QTimer.singleShot( 1500, self.testTimeouted )
 
 
     def testTimeouted( self ):
@@ -33,10 +36,6 @@ class Test( QObject ):
 
 class SleepTest( Test ):
     def run( self ):
-        # set maximum test timeout
-        QTimer.singleShot( 1000, self.testTimeouted )
-
-
         def sleeper( sleepMs ):
             yield Sleep( sleepMs )
 
@@ -62,9 +61,39 @@ class SleepTest( Test ):
         assert now - self.start > mustInterval
         assert now - self.start < mustInterval + datetime.timedelta( milliseconds = 10 )
 
-        # no more sleeper's?
-        if not self.tasks:
-            self.done.emit()
+
+
+class SpeedTest( Test ):
+    def __init__( self, scheduler, tasks ):
+        Test.__init__( self, scheduler )
+        self.tasks = tasks
+
+
+    def incrementer( self ):
+        self.incrementers += 1
+
+        while self.counting:
+            self.counter += 1
+            yield
+
+        self.incrementers -= 1
+
+
+    def run( self ):
+        self.counter = 0
+        self.counting = True
+        self.incrementers = 0
+
+        for i in xrange( self.tasks ):
+            self.scheduler.newTask( self.incrementer() )
+
+        QTimer.singleShot( 1000, self.measure )
+
+
+    def measure( self ):
+        print 'Running %d tasks, %d iterations per second...' % (self.incrementers, self.counter)
+        self.counting = False
+
 
 
 # TODO:)...
@@ -106,44 +135,35 @@ class EventLoopExceptionTest( Test ):
 class Tester( QObject ):
     def __init__( self, scheduler ):
         QObject.__init__( self )
+
         self.tests = deque()
+        self.test = None
         self.scheduler = scheduler
-        scheduler.done.connect( self.allDone )
-        self.deleteIteration = True
-        self.schedulerDone = False
-        QTimer.singleShot( 0, self.nextTest )
+        scheduler.done.connect( self.nextTest )
         print 'Running tests:'
         print
+        QTimer.singleShot( 0, self.nextTest )
 
 
     def nextTest( self ):
-        if not self.tests and self.deleteIteration:
-            print
-            print 'All tests done!'
-            print 'Delete iteration..'
-            self.deleteIteration = False
-            # scheduler should not sent done signal yet
-            assert not self.schedulerDone
-            # let qt deleteLater all tasks and stop the scheduler.
-            QTimer.singleShot( 10, self.nextTest )
-            return
-        elif not self.deleteIteration: 
+        if not self.tests:
             assert not self.scheduler.tasks
-            assert self.schedulerDone
             print 'Bye bye.'
             QCoreApplication.instance().quit()
             return
 
+        # remove old test
+        if self.test:
+            self.test.deleteLater()
+
         # protect test from gc into self..
         self.test = self.tests.pop()
-        self.test.done.connect( self.nextTest )
+
+        assert not self.scheduler.tasks
+        self.test.prepare()
         print 'Run', self.test
         self.test.run()
 
-
-    def allDone( self ):
-        print 'Scheduler done.'
-        self.schedulerDone = True
 
 
     def addTest( self, test ):
@@ -172,4 +192,14 @@ if __name__ == '__main__':
     s = Scheduler()
     tester = Tester( s )
     tester.addTest( SleepTest(s) )
-    a.exec_()
+    tester.addTest( SpeedTest(s, 1) )
+    tester.addTest( SpeedTest(s, 10) )
+    tester.addTest( SpeedTest(s, 100) )
+
+    prof = hotshot.Profile("coroutines.prof")
+    prof.runcall( a.exec_ )
+    prof.close()
+    stats = hotshot.stats.load("coroutines.prof")
+    stats.strip_dirs()
+    stats.sort_stats('time', 'calls')
+    stats.print_stats(20)
