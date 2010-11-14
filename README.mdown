@@ -117,8 +117,8 @@ value from Task** using [signal done(..)](http://github.com/ddosoff/pyqtcoroutin
             ...
 
 
-We have asynchronous multiplexing application with the only **one thread**.  
-Do not care about threads, processes, ipc, syncronization primitives and hard debuging.
+Coroutines asynchronously works with the only **one thread**.  
+Do not care about real threads, processes, ipc, syncronization primitives and hard debuging.
 
 Check out working examples:
 
