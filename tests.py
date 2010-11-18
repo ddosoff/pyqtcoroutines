@@ -15,7 +15,7 @@ import hotshot
 import hotshot.stats
 from collections import deque
 from PyQt4.QtCore import QCoreApplication, QObject, QTimer, pyqtSignal
-from coroutines import Scheduler, Sleep
+from coroutines import Scheduler, Sleep, AsynchronousCall, Return
 
 
 class Test( QObject ):
@@ -25,6 +25,7 @@ class Test( QObject ):
 
 
     def prepare( self ):
+        # set maximum test time
         QTimer.singleShot( 1500, self.testTimeouted )
 
 
@@ -72,6 +73,7 @@ class SpeedTest( Test ):
     def incrementer( self ):
         self.incrementers += 1
 
+        # counting iterations
         while self.counting:
             self.counter += 1
             yield
@@ -94,6 +96,73 @@ class SpeedTest( Test ):
         print 'Running %d tasks, %d iterations per second...' % (self.incrementers, self.counter)
         self.counting = False
 
+
+
+class AsyncCallTest( Test ):
+    def run( self ):
+        # must correctly return argument value
+        # and throw exception, when argument Exception.
+        class Returner( AsynchronousCall ):
+            def __init__( self, val ):
+                self.val = val
+            def handle( self ):
+                self.wakeup( self.val )
+
+
+        # all instances should be deleted
+        class CheckMem( AsynchronousCall ):
+            def __init__( self, test ):
+                AsynchronousCall.__init__( self )
+                self.val = 0
+                self.test = test
+                self.test.counter += 1
+            def __del__( self ):
+                self.test.counter -= 1
+            def handle( self ):
+                self.val += 1
+                assert self.val == 1
+                self.wakeup( self.val )
+
+
+        def simple():
+            for i in xrange( 10 ):
+                res = yield Return( i )
+                assert res == i
+
+
+        def multiple():
+            v1, v2, v3 = yield Returner( (1, 2, 3) )
+            assert v1 == 1
+            assert v2 == 2
+            assert v3 == 3
+
+
+        def exception():
+            try:
+                yield Returner( Exception('oops') )
+                assert False
+            except Exception, e:
+                assert str(e) == 'oops'
+
+
+        def checkMem(test):
+            for i in xrange( 10 ):
+                yield CheckMem(test)
+
+        
+        def counterChecker( test ):
+            # assume, that all checkMems will done faster :)
+            yield Sleep( 100 )
+            assert not test.counter
+
+
+        self.scheduler.newTask( simple() )
+        self.scheduler.newTask( multiple() )
+        self.scheduler.newTask( exception() )
+        self.counter = 0
+        for i in xrange( 10 ):
+            self.scheduler.newTask( checkMem(self) )
+        self.scheduler.newTask( counterChecker(self) )
 
 
 # TODO:)...
@@ -193,12 +262,14 @@ if __name__ == '__main__':
     tester = Tester( s )
     tester.addTest( SleepTest(s) )
     tester.addTest( SpeedTest(s, 1) )
-    tester.addTest( SpeedTest(s, 10) )
     tester.addTest( SpeedTest(s, 100) )
+    tester.addTest( AsyncCallTest(s) )
 
     prof = hotshot.Profile("coroutines.prof")
     prof.runcall( a.exec_ )
     prof.close()
+    print
+    print 'Calc profiling stats...'
     stats = hotshot.stats.load("coroutines.prof")
     stats.strip_dirs()
     stats.sort_stats('time', 'calls')

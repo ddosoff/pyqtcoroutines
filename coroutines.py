@@ -62,15 +62,18 @@ class AsynchronousCall( QObject ):
 
 
     # continue execution
-    def wakeup( self, result ):
-        # self.task was set inside the Scheduler code
-        self.task.sendval = result
+    def wakeup( self, result = None ):
+        if isinstance( result, Exception ):
+            # CoException has additional field to
+            # save subcoroutines stack
+            e = CoException()
+            e.update( result )
+            self.task.exception = e
+        else:
+            self.task.sendval = result
 
         # Wake up execution of the caller's task
         self.scheduler.schedule( self.task )
-
-        # We do not need AsynchronousCall instance more
-        self.deleteLater()
 
 
 
