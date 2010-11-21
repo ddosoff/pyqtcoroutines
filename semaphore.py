@@ -14,6 +14,7 @@ from satchmo.common_lib.coroutines import AsynchronousCall, Return, Sleep
 class Acquirer( AsynchronousCall ):
     def handle( self ):
         # we're quiet :)
+        # Task will scheduled from Semaphore
         pass
 
 

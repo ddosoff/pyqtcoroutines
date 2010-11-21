@@ -66,8 +66,9 @@ class AsynchronousCall( QObject ):
         if isinstance( result, Exception ):
             # CoException has additional field to
             # save subcoroutines stack
-            e = CoException()
-            e.update( result )
+            e = CoException( result )
+            # exception is not raised naturally, format top of the stack manually
+            e.updateStack( traceback.format_stack( limit = 2 )[ -2 ] )
             self.task.exception = e
         else:
             self.task.sendval = result
@@ -104,13 +105,16 @@ class Sleep( AsynchronousCall ):
 # due to own Coroutines stack, we
 # must construct backtrace manually.
 class CoException( Exception ):
-    def __init__( self ):
+    def __init__( self, orig ):
         self.tb = deque()
+        self.orig = orig
 
     
-    def update( self, e ):
-        self.orig = e
-        self.tb.appendleft( traceback.format_tb( sys.exc_traceback )[-1] )
+    def updateStack( self, preformatted = None ):
+        if preformatted:
+            self.tb.appendleft( preformatted )
+        else:
+            self.tb.appendleft( traceback.format_tb( sys.exc_traceback )[-1] )
 
 
 
@@ -188,10 +192,14 @@ class Task( QObject ):
 
             except Exception, e:
                 if self.exception is None:
-                    self.exception = CoException()
+                    self.exception = CoException( e )
+
+                # exception was catched, but new one raised?
+                if self.exception.orig != e:
+                    self.exception = CoException( e )
 
                 # calc own backtrace
-                self.exception.update( e )
+                self.exception.updateStack()
 
                 if not self.stack:
                     # exceptions must be handled in the Task coroutine

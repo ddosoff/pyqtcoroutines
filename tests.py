@@ -137,11 +137,15 @@ class AsyncCallTest( Test ):
             assert v3 == 3
 
 
+        class MyExc( Exception ):
+            pass
+
+
         def exception():
             try:
-                yield Returner( Exception('oops') )
+                yield Returner( MyExc('oops') )
                 assert False
-            except Exception, e:
+            except MyExc, e:
                 assert str(e) == 'oops'
 
 
