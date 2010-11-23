@@ -5,6 +5,7 @@ if __name__ == '__main__':
     reload(sys)
     sys.setdefaultencoding('utf-8')
 
+import datetime
 from collections import deque
 from PyQt4.QtCore import QObject
 from satchmo.common_lib.coroutines import AsynchronousCall, Return, Sleep
@@ -48,6 +49,8 @@ class Semaphore:
     # Usage:
     #   yield sem.acquire()
     def acquire( self ):
+        start = datetime.datetime.now()
+        done = start
         if self.available:
             self.available -= 1
         else:
@@ -56,8 +59,9 @@ class Semaphore:
             self.pending.appendleft( acquirer )
             # sleep, until available
             yield acquirer
+            done = datetime.datetime.now()
 
-        yield Return( self.available )
+        yield Return( self.available, done - start )
 
 
 
@@ -69,8 +73,8 @@ if __name__ == '__main__':
 
     def coWorker( name, sem ):
         sys.stdout.write( '\n' + str(name) + ' acquiring() ... ' )
-        semVal = yield sem.acquire()
-        sys.stdout.write( str(semVal) + '\n' )
+        semVal, delay = yield sem.acquire()
+        sys.stdout.write( '%d avail, %s delay\n' % (semVal, delay) )
         ms = random.randint( 1500, 3000 )
         print name, 'Sleep(): %d ms..' % ms
         yield Sleep( ms )
