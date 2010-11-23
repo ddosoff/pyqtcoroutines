@@ -92,12 +92,13 @@ class Sleep( AsynchronousCall ):
     def handle( self ):
         # QObject is the QT library class. SytemCall inherits QObject.
         # QObject.timerEvent will be called after self.ms milliseconds
-        QObject.startTimer( self, self.ms )
+        self.timerId = QObject.startTimer( self, self.ms )
 
 
     # This is overloaded QObject.timerEvent
     # and will be called by the Qt event loop.
     def timerEvent( self, e ):
+        QObject.killTimer( self, self.timerId )
         self.wakeup( None )
 
 
@@ -281,8 +282,6 @@ class Scheduler( QObject ):
             try:
                 result = task.run()
                 
-                timeout = self.checkRuntime( task )
-          
                 if isinstance( result, AsynchronousCall ):
                     result.setContext( task, self )
                     result.handle()
@@ -291,8 +290,6 @@ class Scheduler( QObject ):
                     continue
                      
             except Exception, e:
-                timeout = self.checkRuntime( task )
-
                 task.deleteLater()
 
                 if isinstance( e, StopIteration ):
@@ -313,6 +310,9 @@ class Scheduler( QObject ):
 
                 # forward exception to the main event loop
                 raise
+
+            finally:
+                timeout = self.checkRuntime( task )
 
             # continue this task later
             self.ready.appendleft( task )
