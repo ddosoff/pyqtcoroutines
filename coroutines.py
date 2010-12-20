@@ -102,6 +102,27 @@ class Sleep( AsynchronousCall ):
         self.wakeup( None )
 
 
+# Wait task, until it's done!
+#
+# Usage:
+#   res = yield WaitTask( task )   # res - task return value
+class WaitTask( AsynchronousCall ):
+    def __init__( self, waitTask ):
+        AsynchronousCall.__init__( self )
+        # save params for the future use
+        self.waitTask = waitTask
+
+
+    def handle( self ):
+        # when Task done, it emits signal done with Return as param
+        self.waitTask.done.connect( self.passParam )
+
+
+    def passParam( self, resReturn ):
+        # expand Return to it's value
+        self.wakeup( resReturn.value )
+
+
 
 # due to own Coroutines stack, we
 # must construct backtrace manually.
