@@ -11,7 +11,7 @@ import datetime
 import traceback
 from collections import deque
 from types import GeneratorType
-from PyQt4.QtCore import QObject, QTimer, pyqtSignal
+from PyQt4.QtCore import QObject, QTimer, pyqtSignal, QCoreApplication
 
 
 # Reduce scheduler overhead
@@ -64,12 +64,13 @@ class AsynchronousCall( QObject ):
     # continue execution
     def wakeup( self, result = None ):
         if isinstance( result, Exception ):
-            # CoException has additional field to
-            # save subcoroutines stack
-            e = CoException( result )
-            # exception is not raised naturally, format top of the stack manually
-            e.updateStack( traceback.format_stack( limit = 2 )[ -2 ] )
-            self.task.exception = e
+            if not isinstance( result, CoException ):
+                # Construct CoException to
+                # save subcoroutines stack
+                result = CoException( result )
+                # exception is not raised naturally, format top of the stack manually
+                result.updateStack( traceback.format_stack( limit = 2 )[ -2 ] )
+            self.task.exception = result
         else:
             self.task.sendval = result
 
@@ -102,10 +103,11 @@ class Sleep( AsynchronousCall ):
         self.wakeup( None )
 
 
+
 # Wait task, until it's done!
 #
 # Usage:
-#   res = yield WaitTask( task )   # res - task return value
+#   res = yield WaitTask( task )   # res - task return value or raises Exception from task
 class WaitTask( AsynchronousCall ):
     def __init__( self, waitTask ):
         AsynchronousCall.__init__( self )
@@ -114,8 +116,17 @@ class WaitTask( AsynchronousCall ):
 
 
     def handle( self ):
-        # when Task done, it emits signal done with Return as param
-        self.waitTask.done.connect( self.passParam )
+        if self.waitTask.state == Task.RUNNING:
+            # When task is done, it emits signal done(Return)
+            self.waitTask.done.connect( self.passParam )
+        elif self.waitTask.state == Task.DONE:
+            # repeat last return value
+            self.wakeup( self.waitTask.result.value )
+        elif self.waitTask.state == Task.EXCEPTION:
+            # raise exception in the waiter
+            self.wakeup( self.waitTask.exception )
+        else:
+            raise Exception( 'Unknown %s state %d' % (self.waitTask, self.waitTask.state) )
 
 
     def passParam( self, resReturn ):
@@ -124,11 +135,61 @@ class WaitTask( AsynchronousCall ):
 
 
 
-# due to own Coroutines stack, we
-# must construct backtrace manually.
+# Wait, until first task is done or Exception!
+#
+# Usage:
+#   task = WaitFirstTask( [task1, task2, ... ], [timeout] )
+class WaitFirstTask( AsynchronousCall ):
+    def __init__( self, iterableTasks, timeoutMs = 0 ):
+        AsynchronousCall.__init__( self )
+        # save params for the future use
+        self.tasks = iterableTasks
+        assert self.tasks
+        self.timeoutMs = timeoutMs
+
+
+    def handle( self ):
+        connected = []
+        for t in self.tasks:
+            if t.state == Task.RUNNING:
+                t.done.connect( self.passParam )
+                connected.append( t )
+            elif t.state == Task.DONE or t.state == Task.EXCEPTION:
+                [u.done.disconnect( self.passParam ) for u in connected ]
+                self.wakeup( t )
+                return
+            else:
+                raise Exception( 'Unknown %s state %d' % (t, t.state) )
+
+        # timoeut passed?
+        if self.timeoutMs:
+            self.timerId = QObject.startTimer( self, self.timeoutMs )
+
+
+    # tasks done signal
+    def passParam( self, resReturn ):
+        for t in self.tasks:
+            t.done.disconnect( self.passParam )
+
+        # expand Return to it's value
+        self.wakeup( self.sender() )
+
+
+    def timerEvent( self, e ):
+        for t in self.tasks:
+            t.done.disconnect( self.passParam )
+
+        QObject.killTimer( self, self.timerId )
+        self.wakeup( None )
+
+
+
+# Exception with the coroutines stack
 class CoException( Exception ):
     def __init__( self, orig ):
+        # coroutines traceback
         self.tb = deque()
+        # original Exception
         self.orig = orig
 
     
@@ -136,28 +197,87 @@ class CoException( Exception ):
         if preformatted:
             self.tb.appendleft( preformatted )
         else:
-            self.tb.appendleft( traceback.format_tb( sys.exc_traceback )[-1] )
+            formattedList = traceback.format_tb( sys.exc_traceback )
+            if len(formattedList) > 1:
+                formattedList.reverse()
+                for e in formattedList[:-1]:
+                    self.tb.appendleft( e )
+            else:
+                self.tb.appendleft( traceback.format_tb( sys.exc_traceback )[0] )
 
+
+    def __repr__( self ):
+        res = ''
+        for l in self.tb:
+            res += l
+        strExc = str(self.orig)
+        res += strExc + '\n' + '-' * len(strExc) + '\n\n'
+        return res
+
+
+    def __str__( self ):
+        return self.__repr__()
 
 
 # Coroutine based task
 class Task( QObject ):
+    # Return.value is task result, if no unhandled Exceptions occured.
+    # Emmited on Exception with Exception as Return.value, if emitUnhandled set.
+    # Do not emmited with exception, if emitUnhandled is False. Pass exceptions to main loop.
     done = pyqtSignal( Return )
+
+    # States
+    NEW = 0
+    RUNNING = 1
+    DONE = 2
+    EXCEPTION = 3
+
+    def stateStr( self ):
+        if self.state == Task.NEW:
+            return 'NEW'
+        elif self.state == Task.RUNNING:
+            return 'RUNNING'
+        elif self.state == Task.DONE:
+            return 'DONE'
+        elif self.state == Task.EXCEPTION:
+            return 'EXCEPTION'
+        else:
+            raise Exception( 'Unknown state %s' % self.state )
+
 
     def __init__( self, parent, coroutine ):
         QObject.__init__( self, parent )
 
+        self.state = Task.NEW
         self.stack = deque()          # stack for subcoroutines
         self.coroutine = coroutine    # task coroutine / top subcoroutine
         self.sendval = None           # value to send into coroutine
         self.exception = None         # save exceptions here
         self.result = Return( None )  # default return value
+        # Do not route exceptions to Scheduler
+        self.emitUnhandled = False    # emits done with unhandled exception as Return.value
+
+
+    # Do not pass exceptions to scheduler.
+    #
+    # Useful with WaitTask of WaitFirstTask calls.
+    def setEmitUnhandled( self, val = True ):
+        self.emitUnhandled = val
 
 
     def formatBacktrace( self ):
         # TODO: implement full trace
         return 'File "%s", line %d' % \
                (self.coroutine.gi_code.co_filename, self.coroutine.gi_frame.f_lineno)
+
+
+    def val( self ):
+        if self.state == Task.DONE:
+            return self.result.value
+        if self.state == Task.EXCEPTION:
+            return self.exception.orig
+        else:
+            assert False, "Can't get result. State: %d" % self.state
 
 
     # Run a task until it hits the next yield statement
@@ -198,12 +318,16 @@ class Task( QObject ):
                                  (self.formatBacktrace(), type(self.result)) )
 
             except StopIteration:
+                # old exceptions handled
+                self.exception = None
+
                 if not isinstance( self.result, Return ):
                     # replace previous yield
                     self.result = Return( None )
 
                 # end of task?
                 if not self.stack:
+                    self.state = Task.DONE
                     self.done.emit( self.result )
                     raise
 
@@ -224,12 +348,16 @@ class Task( QObject ):
                 self.exception.updateStack()
 
                 if not self.stack:
-                    # exceptions must be handled in the Task coroutine
-                    raise self.exception
+                    self.state = Task.EXCEPTION
+                    if self.emitUnhandled:
+                        self.done.emit( Return(self.exception) )
+                        raise StopIteration()
+                    else:
+                        raise self.exception
 
                 del self.coroutine
                 self.coroutine = self.stack.pop()
-                
+
 
 
 class Scheduler( QObject ):
@@ -239,6 +367,7 @@ class Scheduler( QObject ):
     def __init__( self, parent = None ):
         QObject.__init__( self, parent )
 
+        self.task = None
         self.tasks = 0
         self.ready = deque()
         self.timerId = None
@@ -254,6 +383,7 @@ class Scheduler( QObject ):
         t.destroyed.connect( self.taskDestroyed )
         self.tasks += 1
 
+        t.state = Task.RUNNING
         self.schedule( t )
         return t
 
@@ -289,6 +419,14 @@ class Scheduler( QObject ):
         return False
 
 
+    # Show coroutines stack
+    def formatException( self ):
+        assert isinstance( self.task, Task )
+        assert isinstance( self.task.exception, CoException )
+
+        return '\nUNHANDLED COROUTINE EXCEPTION BACKTRACE (self.printCoException is True)!\n%s' % self.task.exception
+
+
     # The scheduler loop!
     def timerEvent( self, e ):
         # Do not iterate too much.. 
@@ -299,29 +437,25 @@ class Scheduler( QObject ):
             if timeout or not self.ready:
                 break
 
-            task = self.ready.pop()
+            self.task = self.ready.pop()
             try:
-                result = task.run()
+                result = self.task.run()
                 
                 if isinstance( result, AsynchronousCall ):
-                    result.setContext( task, self )
+                    result.setContext( self.task, self )
                     result.handle()
 
                     # AsynchronousCall will resume execution later
                     continue
                      
             except Exception, e:
-                task.deleteLater()
+                self.task.deleteLater()
 
                 if isinstance( e, StopIteration ):
                     continue
 
                 if isinstance( e, CoException ) and self.printCoException:
-                    sys.stdout.write( '\nUNHANDLED COROUTINE EXCEPTION BACKTRACE (self.printCoException is True)!\n')
-                    for l in e.tb:
-                        sys.stdout.write( l )
-                    strExc = str(e.orig)
-                    sys.stdout.write( strExc + '\n' + '-' * len(strExc) + '\n\n' )
+                    sys.stdout.write( self.formatException() )
 
                 # this is unknown exception!
                 # stop iterating timer, if all tasks done
@@ -333,16 +467,60 @@ class Scheduler( QObject ):
                 raise
 
             finally:
-                timeout = self.checkRuntime( task )
+                timeout = self.checkRuntime( self.task )
 
             # continue this task later
-            self.ready.appendleft( task )
+            self.ready.appendleft( self.task )
 
         # do not lopp, if all tasks done
         if not self.ready:
             self.killTimer( self.timerId )
             self.timerId = None
-            return
+
+        self.task = None
+
+
+
+class WaitTasksTimeout( Exception ):
+    """ When workers coroutines works too long """
+    def __init__( tasks, maxTimeoutMs ):
+        Exception.__init__( '%d tasks (%s) works longer, then %d ms.' % \
+                            (len(tasks), tasks, maxTimeoutMs) )
+
+
+
+# Wait until many tasks done
+def coWaitTasks( tasks, maxTimeoutMs, breakFunc = lambda tasks, t: False ):
+    """ Wait until all coroutines from tasks 
+        done with result or exception. """
+    while tasks:
+        t = yield WaitFirstTask( tasks, maxTimeoutMs )
+
+        # Timeout?
+        if not t:
+            raise WaitTasksTimeout( tasks, maxTimeoutMs )
+
+        tasks.remove( t )
+
+        if breakFunc( tasks, t ):
+            break
+
+
+
+# paramsList - list( *argv1, *argv2, ... )
+# will start coTask( *argv1 ), coTask( *argv2 )... and returns tasks set
+def coMassiveStart( coTask, tasksParams, serialTimeoutMs = 0, emitUnhandled = True ):
+    scheduler = QCoreApplication.instance().scheduler
+    tasks = set()
+    for argv in tasksParams:
+        t = scheduler.newTask( coTask(*argv) )
+        if emitUnhandled:
+            t.setEmitUnhandled()
+
+        tasks.add( t )
+        yield Sleep( serialTimeoutMs )
+
+    yield Return( tasks )
 
 
 

@@ -46,6 +46,10 @@ class Semaphore:
 
 
 
+    def __repr__( self ):
+        return 'Семафор( свободно %d из %d, в очереди %d )' % ( self.available, self.initial, len(self.pending) )
+
+
     # Usage:
     #   yield sem.acquire()
     def acquire( self ):
